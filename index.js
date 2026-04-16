@@ -61,7 +61,6 @@ async function startBot() {
 
         if (connection === "close") {
     console.log("⏳ Menunggu pairing... (tidak reconnect)")
-    })
 }
 
 // ================= RUN =================
