@@ -28,7 +28,6 @@ async function startBot(name) {
 
   const sock = makeWASocket({
     auth: state,
-    printQRInTerminal: true,
     browser: ["ArmbianBot", "Chrome", "1.0"]
   })
 
