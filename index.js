@@ -15,7 +15,7 @@ async function startBot() {
     const sock = makeWASocket({
         version,
         auth: state,
-        browser: ["Ubuntu", "Chrome", "20.0"]
+        browser: ["Windows", "Chrome", "120.0.0"]
     })
 
     sock.ev.on("creds.update", saveCreds)
