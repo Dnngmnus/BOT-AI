@@ -35,15 +35,22 @@ async function startBot(name) {
 
   sock.ev.on("creds.update", saveCreds)
 
-  sock.ev.on("connection.update", ({ connection }) => {
-    if (connection === "close") {
-      console.log(`[${name}] reconnecting...`)
-      startBot(name)
-    } else if (connection === "open") {
-      console.log(`[${name}] connected`)
-    }
-  })
+  sock.ev.on("connection.update", ({ connection, qr }) => {
 
+    if (qr) {
+        console.log("📱 Scan QR ini:")
+        qrcode.generate(qr, { small: true })
+    }
+
+    if (connection === "open") {
+        console.log(`✅ ${name} connected`)
+    }
+
+    if (connection === "close") {
+        console.log(`❌ ${name} reconnecting...`)
+        startBot(name)
+    }
+})
   sock.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0]
     if (!msg.message || msg.key.fromMe) return
