@@ -112,5 +112,5 @@ async function startAll() {
     await startBot(name)
   }
 }
-
+const QRCode = require("qrcode-terminal")
 startAll()
