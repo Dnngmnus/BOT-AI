@@ -60,17 +60,7 @@ async function startBot() {
         }
 
         if (connection === "close") {
-
-            const statusCode = lastDisconnect?.error?.output?.statusCode
-
-            if (statusCode === 428) {
-            console.log("⏳ Tunggu... jangan matikan bot, segera input kode di HP!")
-            return
-        }
-
-        console.log("❌ Koneksi putus, retry 5 detik...")
-        setTimeout(() => startBot(), 5000)
-        }
+    console.log("⏳ Menunggu pairing... (tidak reconnect)")
     })
 }
 
