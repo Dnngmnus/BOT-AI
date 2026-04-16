@@ -43,16 +43,18 @@ async function startBot() {
 
     sock.ev.on("creds.update", saveCreds)
 
-    // 🔑 pairing
+    // 🔑 PAIRING
     if (!state.creds.registered) {
         try {
             const code = await sock.requestPairingCode(nomor)
-            console.log("\n🔑 Pairing Code:", code, "\n")
+            console.log("\n🔑 Pairing Code:", code)
+            console.log("📱 Segera masukkan kode di WhatsApp!\n")
         } catch (err) {
             console.log("❌ Gagal pairing:", err.message)
         }
     }
 
+    // ================= CONNECTION =================
     sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
 
         if (connection === "open") {
@@ -60,7 +62,19 @@ async function startBot() {
         }
 
         if (connection === "close") {
-    console.log("⏳ Menunggu pairing... (tidak reconnect)")
+
+            const statusCode = lastDisconnect?.error?.output?.statusCode
+
+            // ⛔ JANGAN reconnect saat pairing
+            if (statusCode === 428) {
+                console.log("⏳ Menunggu pairing di HP... jangan tutup bot")
+                return
+            }
+
+            console.log("❌ Koneksi putus, retry 5 detik...")
+            setTimeout(() => startBot(), 5000)
+        }
+    })
 }
 
 // ================= RUN =================
