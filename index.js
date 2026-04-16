@@ -1,7 +1,7 @@
 const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys")
 const readline = require("readline")
 
-// ================== INPUT NOMOR ==================
+// ================= INPUT NOMOR =================
 async function inputNomor() {
     const rl = readline.createInterface({
         input: process.stdin,
@@ -29,10 +29,10 @@ async function inputNomor() {
     return nomor
 }
 
-// ================== START BOT ==================
+// ================= START BOT =================
 async function startBot() {
 
-    const nomor = await inputNomor() // ⬅️ sekarang sudah ada
+    const nomor = await inputNomor()
 
     const { state, saveCreds } = await useMultiFileAuthState("session")
 
@@ -43,6 +43,7 @@ async function startBot() {
 
     sock.ev.on("creds.update", saveCreds)
 
+    // 🔑 pairing
     if (!state.creds.registered) {
         try {
             const code = await sock.requestPairingCode(nomor)
@@ -52,25 +53,26 @@ async function startBot() {
         }
     }
 
-   sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
+    sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
 
-    if (connection === "open") {
-        console.log("✅ Login berhasil!")
-    }
-
-    if (connection === "close") {
-
-        const statusCode = lastDisconnect?.error?.output?.statusCode
-
-        // ❌ JANGAN reconnect kalau belum login
-        if (statusCode === 428) {
-            console.log("⏳ Menunggu pairing di HP...")
-            return
+        if (connection === "open") {
+            console.log("✅ Login berhasil!")
         }
 
-        console.log("❌ Reconnecting...")
-        startBot()
-    }
-})
+        if (connection === "close") {
 
+            const statusCode = lastDisconnect?.error?.output?.statusCode
+
+            if (statusCode === 428) {
+                console.log("⏳ Menunggu pairing di HP...")
+                return
+            }
+
+            console.log("❌ Reconnecting...")
+            startBot()
+        }
+    })
+}
+
+// ================= RUN =================
 startBot()
