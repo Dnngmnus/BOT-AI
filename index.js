@@ -6,7 +6,36 @@ const {
 
 const readline = require("readline")
 
+// input nomor
+async function inputNomor() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    })
+
+    let nomor = await new Promise(resolve => {
+        rl.question("Masukkan nomor (08 / 628): ", resolve)
+    })
+
+    rl.close()
+
+    nomor = nomor.replace(/[^0-9]/g, "")
+
+    if (nomor.startsWith("08")) {
+        nomor = "62" + nomor.slice(1)
+    }
+
+    if (!/^628[0-9]{8,13}$/.test(nomor)) {
+        console.log("❌ Nomor tidak valid!")
+        process.exit(1)
+    }
+
+    console.log("✅ Nomor:", nomor)
+    return nomor
+}
+
 async function startBot() {
+    const nomor = await inputNomor()
 
     const { state, saveCreds } = await useMultiFileAuthState("session")
 
@@ -20,7 +49,7 @@ async function startBot() {
 
     sock.ev.on("creds.update", saveCreds)
 
-    let pairingRequested = false
+    let pairingDone = false
 
     sock.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect } = update
@@ -30,37 +59,17 @@ async function startBot() {
         }
 
         if (connection === "open") {
-            console.log("✅ Berhasil connect ke WhatsApp!")
+            console.log("✅ Login berhasil!")
         }
 
-        // 🔑 REQUEST PAIRING DI SINI (PALING AMAN)
-        if (!state.creds.registered && !pairingRequested) {
-
-            pairingRequested = true
-
-            const rl = readline.createInterface({
-                input: process.stdin,
-                output: process.stdout
-            })
-
-            let nomor = await new Promise(resolve => {
-                rl.question("Masukkan nomor (08 / 628): ", resolve)
-            })
-
-            rl.close()
-
-            nomor = nomor.replace(/[^0-9]/g, "")
-
-            if (nomor.startsWith("08")) {
-                nomor = "62" + nomor.slice(1)
-            }
-
-            console.log("📱 Nomor:", nomor)
+        // 🔑 pairing
+        if (!state.creds.registered && !pairingDone) {
+            pairingDone = true
 
             try {
                 const code = await sock.requestPairingCode(nomor)
                 console.log("\n🔑 Pairing Code:", code)
-                console.log("👉 Masukkan kode di HP sekarang!\n")
+                console.log("📱 Masukkan di WhatsApp sekarang!\n")
             } catch (err) {
                 console.log("❌ Pairing gagal:", err.message)
             }
@@ -71,14 +80,14 @@ async function startBot() {
 
             console.log("❌ Koneksi putus:", reason)
 
-            // ⛔ JANGAN RESTART SAAT PAIRING
+            // jangan restart saat pairing
             if (reason === 428) {
-                console.log("⏳ Menunggu pairing... jangan matikan bot")
+                console.log("⏳ Menunggu pairing... jangan tutup bot")
                 return
             }
 
-            console.log("🔁 Restarting...")
-            startBot()
+            console.log("🔁 Restarting 5 detik...")
+            setTimeout(startBot, 5000)
         }
     })
 }
