@@ -33,8 +33,3 @@ async function startBot() {
 }
 
 startBot()
-
-    console.log("✅ Nomor:", nomor)
-    return nomor
-
-startBot()
