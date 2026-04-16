@@ -1,7 +1,7 @@
-const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys")
-const readline = require("readline")
-
 async function startBot() {
+
+    const nomor = await inputNomor() // ⬅️ ambil nomor dulu
+
     const { state, saveCreds } = await useMultiFileAuthState("session")
 
     const sock = makeWASocket({
@@ -11,37 +11,31 @@ async function startBot() {
 
     sock.ev.on("creds.update", saveCreds)
 
-    // 🔑 PAIRING CODE LOGIN
     if (!state.creds.registered) {
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        })
-
-        const nomor = await new Promise(resolve => {
-            rl.question("Masukkan nomor (628xxx): ", resolve)
-        })
-
         try {
             const code = await sock.requestPairingCode(nomor)
             console.log("\n🔑 Pairing Code:", code, "\n")
         } catch (err) {
-            console.log("❌ Error pairing:", err.message)
+            console.log("❌ Gagal pairing:", err.message)
         }
-
-        rl.close()
     }
 
     sock.ev.on("connection.update", ({ connection }) => {
         if (connection === "open") {
-            console.log("✅ Berhasil login!")
+            console.log("✅ Login berhasil!")
         }
 
         if (connection === "close") {
-            console.log("❌ Koneksi putus, reconnect...")
+            console.log("❌ Reconnecting...")
             startBot()
         }
     })
+}
+
+startBot()
+
+    console.log("✅ Nomor:", nomor)
+    return nomor
 }
 
 startBot()
