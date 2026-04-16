@@ -1,7 +1,6 @@
 const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys")
 const readline = require("readline")
 
-// ================= INPUT NOMOR =================
 async function inputNomor() {
     const rl = readline.createInterface({
         input: process.stdin,
@@ -29,7 +28,6 @@ async function inputNomor() {
     return nomor
 }
 
-// ================= START BOT =================
 async function startBot() {
 
     const nomor = await inputNomor()
@@ -43,31 +41,33 @@ async function startBot() {
 
     sock.ev.on("creds.update", saveCreds)
 
-    // 🔑 PAIRING
-    if (!state.creds.registered) {
-        try {
-            const code = await sock.requestPairingCode(nomor)
-            console.log("\n🔑 Pairing Code:", code)
-            console.log("📱 Segera masukkan kode di WhatsApp!\n")
-        } catch (err) {
-            console.log("❌ Gagal pairing:", err.message)
-        }
-    }
+    let pairingDone = false
 
-    // ================= CONNECTION =================
-    sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
+    sock.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
 
         if (connection === "open") {
+            console.log("🌐 Koneksi siap")
+
+            // 🔑 REQUEST PAIRING DI SINI (BUKAN DI ATAS)
+            if (!state.creds.registered && !pairingDone) {
+                pairingDone = true
+                try {
+                    const code = await sock.requestPairingCode(nomor)
+                    console.log("\n🔑 Pairing Code:", code)
+                    console.log("📱 Cepat masukkan di HP!\n")
+                } catch (err) {
+                    console.log("❌ Gagal pairing:", err.message)
+                }
+            }
+
             console.log("✅ Login berhasil!")
         }
 
         if (connection === "close") {
-
             const statusCode = lastDisconnect?.error?.output?.statusCode
 
-            // ⛔ JANGAN reconnect saat pairing
             if (statusCode === 428) {
-                console.log("⏳ Menunggu pairing di HP... jangan tutup bot")
+                console.log("⏳ Menunggu pairing di HP...")
                 return
             }
 
@@ -77,5 +77,4 @@ async function startBot() {
     })
 }
 
-// ================= RUN =================
 startBot()
