@@ -52,16 +52,25 @@ async function startBot() {
         }
     }
 
-    sock.ev.on("connection.update", ({ connection }) => {
-        if (connection === "open") {
-            console.log("✅ Login berhasil!")
+   sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
+
+    if (connection === "open") {
+        console.log("✅ Login berhasil!")
+    }
+
+    if (connection === "close") {
+
+        const statusCode = lastDisconnect?.error?.output?.statusCode
+
+        // ❌ JANGAN reconnect kalau belum login
+        if (statusCode === 428) {
+            console.log("⏳ Menunggu pairing di HP...")
+            return
         }
 
-        if (connection === "close") {
-            console.log("❌ Reconnecting...")
-            startBot()
-        }
-    })
-}
+        console.log("❌ Reconnecting...")
+        startBot()
+    }
+})
 
 startBot()
