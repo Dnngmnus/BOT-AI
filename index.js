@@ -63,7 +63,7 @@ async function startBot() {
 
             const statusCode = lastDisconnect?.error?.output?.statusCode
 
-            if if (statusCode === 428) {
+            if (statusCode === 428) {
             console.log("⏳ Tunggu... jangan matikan bot, segera input kode di HP!")
             return
         }
